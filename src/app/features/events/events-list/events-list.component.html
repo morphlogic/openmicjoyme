@@ -1,0 +1,10 @@
+<section *ngIf="vm$ | async as vm">
+  <ng-container *ngFor="let d of vm.days">
+    <h2>{{ weekdayLabel[d.weekday] }} — {{ d.date | date:'MMM d' }}</h2>
+    <div class="grid">
+      <app-event-card *ngFor="let e of d.items" [event]="e"></app-event-card>
+    </div>
+    <mat-divider></mat-divider>
+  </ng-container>
+  <p *ngIf="!vm.any">No events yet for this week. Check back soon!</p>
+</section>

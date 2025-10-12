@@ -1,0 +1,22 @@
+<mat-card class="event-card" *ngIf="event">
+  <mat-card-header>
+    <div mat-card-avatar class="avatar">🎤</div>
+    <mat-card-title>{{ event.name }}</mat-card-title>
+    <mat-card-subtitle>{{ event.venue }} • {{ event.city }}</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <p><strong>Show:</strong> {{ event.startTimeLocal }}
+      <span *ngIf="event.signupTimeLocal"> • <strong>Signup:</strong> {{ event.signupTimeLocal }}</span></p>
+    <p *ngIf="event.cost"><strong>Cost:</strong> {{ event.cost }}</p>
+    <p *ngIf="event.signupMethod"><strong>Signup:</strong> {{ event.signupMethod }}</p>
+    <p *ngIf="event.notes">{{ event.notes }}</p>
+    <mat-chip-set>
+      <mat-chip appearance="outlined">{{ event.type }}</mat-chip>
+      <mat-chip appearance="outlined">{{ event.frequency }}</mat-chip>
+    </mat-chip-set>
+  </mat-card-content>
+  <mat-card-actions>
+    <a mat-button *ngIf="event.website" [href]="event.website" target="_blank" rel="noopener">Website</a>
+    <a mat-button *ngIf="event.contact" [href]="event.contact" target="_blank" rel="noopener">Contact</a>
+  </mat-card-actions>
+</mat-card>

@@ -1,0 +1,34 @@
+[
+  {
+    "id": "backdoor-fri",
+    "name": "Backdoor Friday Open Mic",
+    "venue": "Backdoor Comedy Club",
+    "city": "Dallas",
+    "dayOfWeek": 5,
+    "startTimeLocal": "20:00",
+    "signupTimeLocal": "19:00",
+    "cost": "2 drink min",
+    "type": "open-mic",
+    "frequency": "weekly",
+    "signupMethod": "in-person",
+    "contact": "https://instagram.com/backdoorcomedy",
+    "website": "https://backdoorcomedy.com",
+    "notes": "5 min, list caps at 25"
+  },
+  {
+    "id": "hyenas-thu",
+    "name": "Hyena's Thursday Mic",
+    "venue": "Hyena's Comedy Club",
+    "city": "Dallas",
+    "dayOfWeek": 4,
+    "startTimeLocal": "20:30",
+    "signupTimeLocal": "19:30",
+    "cost": "Free",
+    "type": "open-mic",
+    "frequency": "weekly",
+    "signupMethod": "online",
+    "contact": "https://instagram.com/hyenasdallas",
+    "website": "https://hyenascomedyclub.com/dallas",
+    "notes": "Lottery; arrive early"
+  }
+]

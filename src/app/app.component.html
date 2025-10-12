@@ -1,0 +1,15 @@
+<mat-toolbar color="primary" class="app-toolbar">
+  <span class="brand">OpenMicJoy</span>
+  <span class="spacer"></span>
+  <a mat-button routerLink="/">This Week</a>
+  <a mat-button routerLink="/about">About</a>
+</mat-toolbar>
+
+<main class="container">
+  <h1 class="sr-only">OpenMicJoy — DFW Comedy Schedule</h1>
+  <router-outlet></router-outlet>
+</main>
+
+<footer class="footer">
+  <div>© {{ currentYear }} OpenMicJoy — DFW Comedy</div>
+</footer>
