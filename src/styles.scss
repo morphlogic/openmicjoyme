@@ -1,4 +1,118 @@
-:root { --container-max: 960px; }
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, 'Helvetica Neue', Arial, sans-serif; background: #fafafa; color: #222; }
-a { text-decoration: none; }
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --container-max: 960px;
+  --color-backdrop: #050304;
+  --color-brick: #8c1f2d;
+  --color-brick-highlight: #bf3b3b;
+  --color-text: #d7d7d7;
+  --color-text-muted: #aaa;
+  --color-white: #ffffff;
+  --color-accent: #ff6f61;
+  --shadow-soft: 0 14px 42px rgba(0, 0, 0, 0.55);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  background-color: var(--color-backdrop);
+}
+
+body {
+  margin: 0;
+  font-family: 'Poppins', 'DM Sans', 'Segoe UI', sans-serif;
+  color: var(--color-text);
+  line-height: 1.65;
+  background-image:
+    linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.85),
+      rgba(0, 0, 0, 0.85)
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(140, 31, 45, 0.55) 0,
+      rgba(140, 31, 45, 0.55) 22px,
+      rgba(191, 59, 59, 0.35) 22px,
+      rgba(191, 59, 59, 0.35) 44px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(140, 31, 45, 0.5) 0,
+      rgba(140, 31, 45, 0.5) 70px,
+      rgba(40, 0, 5, 0.6) 70px,
+      rgba(40, 0, 5, 0.6) 75px
+    );
+  background-size: cover, 100% 44px, 75px 100%;
+}
+
+a {
+  text-decoration: none;
+  color: var(--color-white);
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+a:hover,
+a:focus-visible {
+  opacity: 0.85;
+}
+
+.mat-toolbar.mat-primary {
+  background: linear-gradient(135deg, rgba(5, 3, 4, 0.95) 0%, rgba(140, 31, 45, 0.92) 100%);
+  color: var(--color-white);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.6);
+}
+
+.mat-mdc-button-base.mat-mdc-button {
+  --mdc-text-button-label-text-color: var(--color-white);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.mat-mdc-card {
+  background: rgba(12, 9, 11, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  box-shadow: var(--shadow-soft);
+  color: var(--color-text);
+  backdrop-filter: blur(6px);
+}
+
+.mat-mdc-card .mat-mdc-card-subtitle {
+  color: var(--color-text-muted);
+}
+
+.mat-mdc-chip-set .mdc-evolution-chip__text-label {
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+}
+
+.mat-mdc-standard-chip {
+  --mdc-chip-elevated-container-color: rgba(255, 255, 255, 0.06);
+  --mdc-chip-label-text-color: var(--color-text);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.mat-divider {
+  border-color: rgba(255, 255, 255, 0.08);
+  margin: 2rem 0;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

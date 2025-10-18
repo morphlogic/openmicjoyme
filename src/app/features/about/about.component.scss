@@ -1,0 +1,18 @@
+article {
+  display: grid;
+  gap: 0.75rem;
+  color: var(--color-text);
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.4rem;
+  color: var(--color-white);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+p {
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+}

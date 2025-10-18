@@ -1,1 +1,33 @@
-.event-card { .avatar { font-size: 20px; display: grid; place-items: center; } }
+.event-card {
+  display: block;
+
+  .avatar {
+    font-size: 20px;
+    display: grid;
+    place-items: center;
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0) 60%);
+  }
+
+  .mat-mdc-card-title {
+    font-size: 1.1rem;
+    letter-spacing: 0.02em;
+    color: var(--color-white);
+  }
+
+  .mat-mdc-card-subtitle {
+    color: var(--color-text-muted);
+  }
+
+  mat-card-content strong {
+    color: var(--color-white);
+  }
+
+  mat-chip-set {
+    margin-top: 0.75rem;
+  }
+
+  mat-card-actions a[mat-button] {
+    color: var(--color-accent);
+    font-weight: 600;
+  }
+}

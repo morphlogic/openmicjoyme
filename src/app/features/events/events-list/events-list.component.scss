@@ -1,2 +1,17 @@
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-h2 { margin: 1.25rem 0 0.5rem; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+h2 {
+  margin: 1.5rem 0 0.75rem;
+  color: var(--color-white);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-size: 1rem;
+}
+
+p {
+  color: var(--color-text-muted);
+}
