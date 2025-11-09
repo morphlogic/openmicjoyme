@@ -1,9 +1,23 @@
-node_modules
+# Git & VCS
 .git
 .gitignore
-Dockerfile
-docker-compose.yml
-README.md
+
+# Node output
+node_modules
+npm-debug.log
+yarn.lock
+pnpm-lock.yaml
+
+# OS/editor
+.DS_Store
+Thumbs.db
+*.swp
+*~
+*.bak
+
+# Env files (we pass via env_file:)
+.env*
+!/.env.omjapp.example
+
+# Local dist (we build inside the container)
 dist
-tmp
-coverage
