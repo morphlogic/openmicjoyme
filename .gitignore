@@ -6,10 +6,26 @@
 /e2e/test-output/
 /.angular/
 .angular/
+.tmp/
+.npm/
+.nyc_output
+*.log
+*.pid
+
+# OS/editor
+.DS_Store
+Thumbs.db
+*.swp
+*~
+*.bak
+
+# Env & local docker
+.env*
+!.env.omjapp.example
+docker-data/
 
 # Node modules and dependency files
 /node_modules/
-/package-lock.json
 /yarn.lock
 
 # Environment files
@@ -26,3 +42,4 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.env.omjapp
