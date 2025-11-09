@@ -1,21 +1,27 @@
 import { Injectable, inject } from '@angular/core';
-import { SwUpdate } from '@angular/service-worker';
+import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
+import { filter } from 'rxjs/operators';
 
 @Injectable({ providedIn: 'root' })
 export class UpdateService {
-  // Optional injection so there’s no DI error when SW isn’t registered
-  private swUpdate = inject(SwUpdate, { optional: true });
+  private readonly updates = inject(SwUpdate);
 
-  init() {
-    // Bail out if service workers aren’t enabled or provider is absent
-    if (!this.swUpdate || !this.swUpdate.isEnabled) return;
+  constructor() {
+    if (this.updates.isEnabled) {
+      this.updates.versionUpdates
+        .pipe(filter((e): e is VersionReadyEvent => e.type === 'VERSION_READY'))
+        .subscribe(async (e) => {
+          console.log('[OMJ] SW update ready:', e.latestVersion.hash);
+          try { await this.updates.activateUpdate(); } catch {}
+          setTimeout(() => document.location.reload(), 250);
+        });
+    }
+  }
 
-    this.swUpdate.versionUpdates.subscribe(() => {
-      if (confirm('A new version is available. Reload now?')) {
-        document.location.reload();
-      }
-    });
-
-    setInterval(() => this.swUpdate!.checkForUpdate(), 15 * 60 * 1000);
+  /** Optional one-shot check invoked by AppComponent */
+  async init(): Promise<void> {
+    if (this.updates.isEnabled) {
+      try { await this.updates.checkForUpdate(); } catch {}
+    }
   }
 }

@@ -15,11 +15,14 @@ services:
     networks: [proxy]
     env_file:
       - .env.omjapp
+    secrets:
+      - omj_sendgrid_api_key
     environment:
       - NODE_ENV=production
       - VIRTUAL_HOST=openmicjoy.me,openmicjoy.com,www.openmicjoy.me,www.openmicjoy.com
       - LETSENCRYPT_HOST=openmicjoy.me,openmicjoy.com,www.openmicjoy.me,www.openmicjoy.com
       - VIRTUAL_PORT=4000
+      - SMTP_PASS_FILE=/run/secrets/omj_sendgrid_api_key
     expose:
       - "4000"
     healthcheck:
@@ -28,3 +31,7 @@ services:
       timeout: 3s
       retries: 5
       start_period: 20s
+
+secrets:
+  omj_sendgrid_api_key:
+    file: /srv/secrets/omj_sendgrid_api_key
