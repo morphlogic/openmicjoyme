@@ -39,6 +39,20 @@
   padding: 2.5rem 1rem;
   font-size: 0.85rem;
   color: var(--color-text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.footer a {
+  color: var(--color-accent, #ff6f61);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.footer a:hover {
+  text-decoration: underline;
 }
 
 @media (max-width: 600px) {

@@ -2,6 +2,7 @@ import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ContactService } from './contact.service';
+import { ToastService } from '../../core/services/toast.service';
 
 @Component({
   selector: 'omj-contact',
@@ -13,18 +14,42 @@ import { ContactService } from './contact.service';
 
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <div class="field">
-        <label>Name</label>
-        <input formControlName="name" type="text" autocomplete="name" />
+        <label for="name">Name</label>
+        <input
+          id="name"
+          formControlName="name"
+          type="text"
+          autocomplete="name"
+          required
+          [attr.aria-invalid]="fieldInvalid('name') ? 'true' : null"
+        />
+        <p class="error" *ngIf="fieldInvalid('name')">{{ fieldMessage('name') }}</p>
       </div>
 
       <div class="field">
-        <label>Email</label>
-        <input formControlName="email" type="email" autocomplete="email" />
+        <label for="email">Email</label>
+        <input
+          id="email"
+          formControlName="email"
+          type="email"
+          autocomplete="email"
+          required
+          [attr.aria-invalid]="fieldInvalid('email') ? 'true' : null"
+        />
+        <p class="error" *ngIf="fieldInvalid('email')">{{ fieldMessage('email') }}</p>
       </div>
 
       <div class="field">
-        <label>Message</label>
-        <textarea formControlName="message" rows="6"></textarea>
+        <label for="message">Message</label>
+        <textarea
+          id="message"
+          formControlName="message"
+          rows="6"
+          required
+          minlength="5"
+          [attr.aria-invalid]="fieldInvalid('message') ? 'true' : null"
+        ></textarea>
+        <p class="error" *ngIf="fieldInvalid('message')">{{ fieldMessage('message') }}</p>
       </div>
 
       <!-- honey pot -->
@@ -32,9 +57,6 @@ import { ContactService } from './contact.service';
 
       <button type="submit" [disabled]="form.invalid || busy()">Send</button>
     </form>
-
-    <p class="ok" *ngIf="ok()">Thanks — we received your message.</p>
-    <p class="err" *ngIf="err()">Sorry, something went wrong. Please try again.</p>
   </section>
   `,
   styles: [`
@@ -51,38 +73,65 @@ import { ContactService } from './contact.service';
       background: var(--color-accent, #ff6f61); color: #111; font-weight: 700;
       box-shadow: var(--shadow-soft, 0 14px 42px rgba(0,0,0,.55));
     }
-    .ok { color: #6dd96d; margin-top: .7rem; }
-    .err { color: #ff8a80; margin-top: .7rem; }
+    .error { color: #ff8a80; font-size: .82rem; margin: -.2rem 0 0; }
+    .error::before { content: '• '; }
     .honey { position: absolute; left: -99999px; width: 1px; height: 1px; opacity: 0; }
   `]
 })
 export class ContactComponent {
   private readonly fb = inject(FormBuilder);
   private readonly api = inject(ContactService);
+  private readonly toast = inject(ToastService);
+
+  private readonly defaultValues = {
+    name: '',
+    email: '',
+    message: '',
+    honey: ''
+  };
 
   readonly form = this.fb.nonNullable.group({
-    name: [''],
-    email: ['', [Validators.email]],
+    name: ['', [Validators.required]],
+    email: ['', [Validators.required, Validators.email]],
     message: ['', [Validators.required, Validators.minLength(5)]],
     honey: ['']
   });
 
   busy = signal(false);
-  ok = signal(false);
-  err = signal(false);
 
   async submit() {
-    this.ok.set(false); this.err.set(false);
-    if (this.form.invalid) return;
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
     this.busy.set(true);
     try {
       await this.api.submit(this.form.getRawValue());
-      this.ok.set(true);
-      this.form.patchValue({ message: '' });
+      this.toast.success('Thanks — we received your message.');
+      this.form.reset(this.defaultValues);
     } catch {
-      this.err.set(true);
+      this.toast.error('Sorry, something went wrong. Please try again.');
     } finally {
       this.busy.set(false);
     }
+  }
+
+  fieldInvalid(control: 'name' | 'email' | 'message'): boolean {
+    const ctrl = this.form.controls[control];
+    return ctrl.invalid && (ctrl.dirty || ctrl.touched);
+  }
+
+  fieldMessage(control: 'name' | 'email' | 'message'): string {
+    const ctrl = this.form.controls[control];
+    const errors = ctrl.errors;
+    if (!errors) return '';
+    if (errors['required']) {
+      if (control === 'name') return 'Name is required.';
+      if (control === 'email') return 'Email is required.';
+      return 'Message is required.';
+    }
+    if (errors['email']) return 'Please enter a valid email address.';
+    if (errors['minlength']) return 'Message must be at least 5 characters.';
+    return 'Please check this field.';
   }
 }
