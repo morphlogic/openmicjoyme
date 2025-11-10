@@ -6,7 +6,12 @@ import { AboutComponent } from './features/about/about.component';
 const routes: Routes = [
   { path: '', component: EventsListComponent },
   { path: 'about', component: AboutComponent },
-  { path: '**', redirectTo: '' }
+  { path: '**', redirectTo: '' },
+  { path: 'contact',
+    loadComponent: () =>
+      import('./features/contact/contact.component')
+        .then(m => m.ContactComponent)
+  },
 ];
 
 @NgModule({

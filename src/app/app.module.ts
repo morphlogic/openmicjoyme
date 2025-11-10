@@ -19,6 +19,7 @@ import { ServiceWorkerModule } from '@angular/service-worker';
 import { EventsListComponent } from './features/events/events-list/events-list.component';
 import { EventCardComponent } from './features/events/event-card/event-card.component';
 import { AboutComponent } from './features/about/about.component';
+import { ContactComponent} from './features/contact/contact.component';
 
 @NgModule({
   declarations: [AppComponent, EventsListComponent, EventCardComponent, AboutComponent],
@@ -34,6 +35,7 @@ import { AboutComponent } from './features/about/about.component';
     MatButtonModule,
     MatChipsModule,
     MatDividerModule,
+    ContactComponent,
     ServiceWorkerModule.register('ngsw-worker.js', {
       enabled: true, // or toggle by env if you prefer
       registrationStrategy: 'registerWhenStable:30000'
