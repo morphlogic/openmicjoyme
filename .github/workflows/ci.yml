@@ -2,32 +2,40 @@ name: CI
 
 on:
   push:
-    branches: [ main, feat/** ]
+    branches:
+      - main
+      - 'release/**'
   pull_request:
-    branches: [ main ]
+
+env:
+  BUILD_DOCKER_IMAGE: ${{ vars.BUILD_DOCKER_IMAGE || 'false' }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Use Node 20
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: npm
 
-      - name: Install
+      - name: Install dependencies
         run: npm ci
 
-      - name: Build
+      - name: Build Angular app
         run: npx ng build --configuration production
 
       - name: Upload dist artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: omj-dist
-          path: dist/**
-          if-no-files-found: ignore
+          name: dist
+          path: dist/
+
+      - name: Build Docker image (optional)
+        if: env.BUILD_DOCKER_IMAGE == 'true'
+        run: docker build -t openmicjoy:ci .
