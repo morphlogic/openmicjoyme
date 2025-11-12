@@ -1,4 +1,4 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, signal, inject, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, ValidatorFn } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -38,8 +38,8 @@ interface ContactFormValues {
   <section class="wrap">
     <h1>Contact</h1>
 
-    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
-      <fieldset class="field">
+    <form #contactFormEl [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <fieldset class="field" [class.invalid-field]="fieldInvalid('role')">
         <legend>I'm a... <span class="required" aria-hidden="true">*</span></legend>
         <div class="radio-grid" role="radiogroup" aria-label="Select who you are">
           <label class="radio" *ngFor="let option of roleOptions">
@@ -74,7 +74,7 @@ interface ContactFormValues {
         <h2>Event details</h2>
         <p class="hint">These fields help us review your schedule change quickly.</p>
 
-        <div class="field">
+        <div class="field" [class.invalid-field]="fieldInvalid('eventName')">
           <label for="eventName">
             Event name
             <span class="required" aria-hidden="true" [class.invalid]="fieldInvalid('eventName')">*</span>
@@ -98,7 +98,7 @@ interface ContactFormValues {
           ></textarea>
         </div>
 
-        <div class="field">
+        <div class="field" [class.invalid-field]="fieldInvalid('firstEventDate')">
           <label for="firstEventDate">
             First event date & time
             <span class="required" aria-hidden="true" [class.invalid]="fieldInvalid('firstEventDate')">*</span>
@@ -107,6 +107,7 @@ interface ContactFormValues {
             id="firstEventDate"
             type="datetime-local"
             formControlName="firstEventDate"
+            [attr.min]="minEventDate"
             [attr.aria-invalid]="fieldInvalid('firstEventDate') ? 'true' : null"
             [attr.aria-describedby]="fieldInvalid('firstEventDate') ? 'firstEventDate-error' : 'firstEventDate-hint'"
           />
@@ -114,7 +115,7 @@ interface ContactFormValues {
           <p class="error" id="firstEventDate-error" *ngIf="fieldInvalid('firstEventDate')">{{ fieldMessage('firstEventDate') }}</p>
         </div>
 
-        <fieldset class="field">
+        <fieldset class="field" [class.invalid-field]="fieldInvalid('frequency')">
           <legend>
             Frequency
             <span class="required" aria-hidden="true" [class.invalid]="fieldInvalid('frequency')">*</span>
@@ -136,7 +137,7 @@ interface ContactFormValues {
         <section class="monthly-details" *ngIf="showMonthlyDetails">
           <p class="hint">Select how this monthly event repeats.</p>
 
-          <fieldset class="field">
+          <fieldset class="field" [class.invalid-field]="fieldInvalid('monthlyPattern')">
             <legend>
               Monthly cadence
               <span class="required" aria-hidden="true" [class.invalid]="fieldInvalid('monthlyPattern')">*</span>
@@ -155,7 +156,7 @@ interface ContactFormValues {
             <p class="error" *ngIf="fieldInvalid('monthlyPattern')">{{ fieldMessage('monthlyPattern') }}</p>
           </fieldset>
 
-          <div class="field monthly-control" *ngIf="monthlyPatternIs('weekday')">
+          <div class="field monthly-control" *ngIf="monthlyPatternIs('weekday')" [class.invalid-field]="fieldInvalid('monthlyOrdinal')">
             <label>
               Week of month
               <span class="required" aria-hidden="true" [class.invalid]="fieldInvalid('monthlyOrdinal')">*</span>
@@ -169,7 +170,7 @@ interface ContactFormValues {
             <p class="error" *ngIf="fieldInvalid('monthlyOrdinal')">{{ fieldMessage('monthlyOrdinal') }}</p>
           </div>
 
-          <div class="field monthly-control" *ngIf="monthlyPatternIs('weekday')">
+          <div class="field monthly-control" *ngIf="monthlyPatternIs('weekday')" [class.invalid-field]="fieldInvalid('monthlyWeekday')">
             <label>
               Weekday
               <span class="required" aria-hidden="true" [class.invalid]="fieldInvalid('monthlyWeekday')">*</span>
@@ -183,7 +184,7 @@ interface ContactFormValues {
             <p class="error" *ngIf="fieldInvalid('monthlyWeekday')">{{ fieldMessage('monthlyWeekday') }}</p>
           </div>
 
-          <div class="field monthly-control" *ngIf="monthlyPatternIs('date')">
+          <div class="field monthly-control" *ngIf="monthlyPatternIs('date')" [class.invalid-field]="fieldInvalid('monthlyMonthday')">
             <label>
               Day of month
               <span class="required" aria-hidden="true" [class.invalid]="fieldInvalid('monthlyMonthday')">*</span>
@@ -198,7 +199,7 @@ interface ContactFormValues {
             <p class="error" *ngIf="fieldInvalid('monthlyMonthday')">{{ fieldMessage('monthlyMonthday') }}</p>
           </div>
 
-          <div class="field" *ngIf="monthlyPatternIs('other')">
+          <div class="field" *ngIf="monthlyPatternIs('other')" [class.invalid-field]="fieldInvalid('monthlyOtherText')">
             <label>
               Describe the cadence
               <span class="required" aria-hidden="true" [class.invalid]="fieldInvalid('monthlyOtherText')">*</span>
@@ -213,7 +214,7 @@ interface ContactFormValues {
         </section>
       </section>
 
-      <div class="field">
+      <div class="field" [class.invalid-field]="fieldInvalid('name')">
         <label for="name">
           Name
           <span class="required" aria-hidden="true" [class.invalid]="fieldInvalid('name')">*</span>
@@ -230,7 +231,7 @@ interface ContactFormValues {
         <p class="error" id="name-error" *ngIf="fieldInvalid('name')">{{ fieldMessage('name') }}</p>
       </div>
 
-      <div class="field">
+      <div class="field" [class.invalid-field]="fieldInvalid('email')">
         <label for="email">
           Email
           <span class="required" aria-hidden="true" [class.invalid]="fieldInvalid('email')">*</span>
@@ -247,17 +248,22 @@ interface ContactFormValues {
         <p class="error" id="email-error" *ngIf="fieldInvalid('email')">{{ fieldMessage('email') }}</p>
       </div>
 
-      <div class="field">
+      <div class="field" [class.invalid-field]="fieldInvalid('message')">
         <label for="message">
-          Message
-          <span class="required" aria-hidden="true" [class.invalid]="fieldInvalid('message')">*</span>
+          Additional details
+          <ng-container *ngIf="additionalDetailsRequired; else optionalDetails">
+            <span class="required" aria-hidden="true" [class.invalid]="fieldInvalid('message')">*</span>
+          </ng-container>
+          <ng-template #optionalDetails>
+            <span class="optional">(optional)</span>
+          </ng-template>
         </label>
         <textarea
           id="message"
           formControlName="message"
           rows="6"
-          required
-          minlength="5"
+          [attr.required]="additionalDetailsRequired ? '' : null"
+          [attr.aria-required]="additionalDetailsRequired ? 'true' : null"
           [attr.aria-invalid]="fieldInvalid('message') ? 'true' : null"
           [attr.aria-describedby]="fieldInvalid('message') ? 'message-error' : null"
         ></textarea>
@@ -307,6 +313,24 @@ interface ContactFormValues {
     .error::before { content: '• '; }
     .monthly-details { border-left: 2px solid rgba(255,255,255,.08); padding-left: 1rem; margin: 1rem 0; }
     .honey { position: absolute; left: -99999px; width: 1px; height: 1px; opacity: 0; }
+    .invalid-field input,
+    .invalid-field textarea,
+    .invalid-field select {
+      background: rgba(255,138,128,.25);
+      border-color: #ff8a80;
+    }
+    fieldset.invalid-field {
+      border-color: #ff8a80;
+      background: rgba(255,138,128,.12);
+    }
+    fieldset.invalid-field legend { color: #ffb4a9; }
+    .error-pulse {
+      animation: errorPulse .7s ease;
+    }
+    @keyframes errorPulse {
+      0% { box-shadow: 0 0 0 0 rgba(255,138,128,.4); }
+      100% { box-shadow: 0 0 0 20px rgba(255,138,128,0); }
+    }
     @media (max-width: 600px) {
       fieldset { padding: .8rem; }
       .radio-grid { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
@@ -317,12 +341,13 @@ export class ContactComponent {
   private readonly fb = inject(FormBuilder);
   private readonly api = inject(ContactService);
   private readonly toast = inject(ToastService);
+  @ViewChild('contactFormEl', { read: ElementRef }) private formElement?: ElementRef<HTMLFormElement>;
 
   readonly roleOptions = [
+    { value: 'other', label: 'Comedy Fan' },
     { value: 'comedian', label: 'Comedian' },
-    { value: 'showrunner', label: 'Showrunner' },
-    { value: 'venueOwner', label: 'Venue Owner' },
-    { value: 'other', label: 'Other' }
+    { value: 'showrunner', label: 'Host / MC' },
+    { value: 'venueOwner', label: 'Venue / Show Rep' }
   ] as const;
 
   readonly eventRequestOptions = [
@@ -419,6 +444,14 @@ export class ContactComponent {
     return this.showEventDetails && this.form.controls.frequency.value === 'monthly';
   }
 
+  get additionalDetailsRequired(): boolean {
+    return !this.requiresEventDetails();
+  }
+
+  get minEventDate(): string {
+    return this.formatDateForInput(new Date());
+  }
+
   monthlyPatternIs(value: MonthlyPatternValue): boolean {
     return this.form.controls.monthlyPattern.value === value;
   }
@@ -426,6 +459,7 @@ export class ContactComponent {
   async submit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.scrollToFirstError();
       return;
     }
     this.busy.set(true);
@@ -492,7 +526,7 @@ export class ContactComponent {
         case 'email':
           return 'Email is required.';
         case 'message':
-          return 'Message is required.';
+          return 'Additional details are required unless you included event info.';
         case 'eventName':
           return 'Event name is required for schedule updates.';
         case 'firstEventDate':
@@ -514,8 +548,10 @@ export class ContactComponent {
       }
     }
     if (errors['email']) return 'Please enter a valid email address.';
+    if (errors['pastDate']) return 'Event date must be in the future.';
+    if (errors['invalidDate']) return 'Please enter a valid date and time.';
     if (errors['minlength']) {
-      if (controlName === 'message') return 'Message must be at least 5 characters.';
+      if (controlName === 'message') return 'Additional details must be at least 5 characters.';
       if (controlName === 'monthlyOtherText') return 'Description must be at least 5 characters.';
     }
     if (errors['min'] || errors['max']) return 'Day must be between 1 and 31.';
@@ -541,7 +577,8 @@ export class ContactComponent {
   private updateEventValidators(): void {
     const needsEvent = this.requiresEventDetails();
     this.setControlValidators('eventName', needsEvent ? [Validators.required] : []);
-    this.setControlValidators('firstEventDate', needsEvent ? [Validators.required] : []);
+    const futureDateValidator = this.futureDateValidator();
+    this.setControlValidators('firstEventDate', needsEvent ? [Validators.required, futureDateValidator] : []);
     this.setControlValidators('frequency', needsEvent ? [Validators.required] : []);
 
     const needsMonthly = needsEvent && this.form.controls.frequency.value === 'monthly';
@@ -560,6 +597,11 @@ export class ContactComponent {
       ? [Validators.required, Validators.minLength(5)]
       : [];
     this.setControlValidators('monthlyOtherText', otherValidators);
+
+    const messageValidators: ValidatorFn[] = this.additionalDetailsRequired
+      ? [Validators.required, Validators.minLength(5)]
+      : [this.minLengthIfProvided(5)];
+    this.setControlValidators('message', messageValidators);
   }
 
   private setControlValidators(controlName: keyof ContactFormValues, validators: ValidatorFn[]): void {
@@ -567,5 +609,47 @@ export class ContactComponent {
     if (!ctrl) return;
     ctrl.setValidators(validators.length ? validators : null);
     ctrl.updateValueAndValidity({ emitEvent: false });
+  }
+
+  private formatDateForInput(date: Date): string {
+    const pad = (value: number) => String(value).padStart(2, '0');
+    const year = date.getFullYear();
+    const month = pad(date.getMonth() + 1);
+    const day = pad(date.getDate());
+    const hours = pad(date.getHours());
+    const minutes = pad(date.getMinutes());
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  }
+
+  private scrollToFirstError(): void {
+    queueMicrotask(() => {
+      const host = this.formElement?.nativeElement;
+      if (!host) return;
+      const firstInvalid = host.querySelector('.invalid-field');
+      if (!(firstInvalid instanceof HTMLElement)) return;
+      firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const focusTarget = firstInvalid.querySelector<HTMLElement>('input, textarea, select');
+      focusTarget?.focus();
+      firstInvalid.classList.add('error-pulse');
+      setTimeout(() => firstInvalid.classList.remove('error-pulse'), 600);
+    });
+  }
+
+  private futureDateValidator(): ValidatorFn {
+    return control => {
+      const value = control.value;
+      if (!value) return null;
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return { invalidDate: true };
+      return date.getTime() < Date.now() ? { pastDate: true } : null;
+    };
+  }
+
+  private minLengthIfProvided(length: number): ValidatorFn {
+    return control => {
+      const value = (control.value ?? '').toString().trim();
+      if (!value) return null;
+      return value.length >= length ? null : { minlength: { requiredLength: length, actualLength: value.length } };
+    };
   }
 }
