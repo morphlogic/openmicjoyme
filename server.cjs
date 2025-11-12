@@ -50,9 +50,9 @@ const isBot = (b) => typeof b?.honey === "string" && b.honey.trim() !== "";
 
 const ROLE_LABELS = {
   comedian: "Comedian",
-  showrunner: "Showrunner",
-  venueOwner: "Venue Owner",
-  other: "Other"
+  showrunner: "Host / MC",
+  venueOwner: "Venue / Show Rep",
+  other: "Comedy Fan"
 };
 const EVENT_ROLE_SET = new Set(["comedian", "showrunner", "venueOwner"]);
 
@@ -169,6 +169,9 @@ function validateEventPayload(payload) {
   if (!payload.eventName) return "missing_event_name";
   if (!payload.firstEventDate) return "missing_event_date";
   if (!payload.frequency) return "missing_frequency";
+  const eventDate = new Date(payload.firstEventDate);
+  if (Number.isNaN(eventDate.getTime())) return "invalid_event_date";
+  if (eventDate.getTime() < Date.now()) return "past_event_date";
 
   if (payload.frequency === "monthly") {
     if (!payload.monthlyPattern) return "missing_monthly_pattern";
@@ -251,8 +254,12 @@ function buildContactEmail(payload, includeEvent) {
   }
 
   lines.push("");
-  lines.push("Message:");
-  lines.push(...indentBlock(payload.message || "(no message provided)"));
+  lines.push("Additional details:");
+  if (payload.message) {
+    lines.push(...indentBlock(payload.message));
+  } else {
+    lines.push("  (not provided)");
+  }
   return lines.join("\n");
 }
 
@@ -310,7 +317,6 @@ app.post("/api/contact", limiter, async (req, res) => {
     if (isBot(incoming)) return res.status(202).json({ ok: true });
 
     const payload = normalizeContactPayload(incoming);
-    if (!payload.message) return res.status(400).json({ ok: false, error: "bad_request" });
 
     const totalLength = [
       payload.name,
@@ -323,6 +329,10 @@ app.post("/api/contact", limiter, async (req, res) => {
     if (totalLength > 16000) return res.status(400).json({ ok: false, error: "payload_too_large" });
 
     const includeEvent = needsEventDetails(payload);
+    if (!includeEvent && !payload.message) return res.status(400).json({ ok: false, error: "bad_request" });
+    if (payload.message && payload.message.length < 5) {
+      return res.status(400).json({ ok: false, error: "message_too_short" });
+    }
     if (includeEvent) {
       const validationError = validateEventPayload(payload);
       if (validationError) return res.status(400).json({ ok: false, error: validationError });
