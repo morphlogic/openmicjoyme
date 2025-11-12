@@ -6,6 +6,17 @@ export interface ContactPayload {
   name: string;
   email: string;
   message: string;
+  role: 'comedian' | 'showrunner' | 'venueOwner' | 'other';
+  eventRequestType: 'added' | 'removed' | 'updated' | 'none';
+  eventName?: string;
+  eventDescription?: string;
+  firstEventDate?: string;
+  frequency?: 'weekly' | 'monthly' | 'one_time';
+  monthlyPattern?: 'weekday' | 'date' | 'other';
+  monthlyOrdinal?: 'first' | 'second' | 'third' | 'fourth' | 'last';
+  monthlyWeekday?: 'sunday' | 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday';
+  monthlyMonthday?: number;
+  monthlyOtherText?: string;
   honey?: string; // hidden anti-bot
 }
 

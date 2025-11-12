@@ -1,0 +1,7 @@
+services:
+  omjapp:
+    build:
+      context: .
+      target: runtime
+    ports:
+      - "4000:4000"
