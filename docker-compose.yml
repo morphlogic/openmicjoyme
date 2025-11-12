@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   omjapp:
     image: ghcr.io/morphlogic/openmicjoyme:${OMJ_TAG:-local}
