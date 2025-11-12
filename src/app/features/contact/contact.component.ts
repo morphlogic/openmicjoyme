@@ -100,7 +100,7 @@ interface ContactFormValues {
 
         <div class="field" [class.invalid-field]="fieldInvalid('firstEventDate')">
           <label for="firstEventDate">
-            First event date & time
+            Next event date & time
             <span class="required" aria-hidden="true" [class.invalid]="fieldInvalid('firstEventDate')">*</span>
           </label>
           <input
