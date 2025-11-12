@@ -1,0 +1,2 @@
+# Copy this file to /etc/cron.d/backup-openmicjoyme to enable daily snapshots.
+10 2 * * * root /srv/openmicjoyme/ops/backup-openmicjoyme.sh >> /var/log/omj-backup.log 2>&1
