@@ -43,3 +43,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .env.omjapp
+
+# local secrets (keep out of git)
+.secrets/

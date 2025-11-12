@@ -1,36 +1,47 @@
+version: "3.8"
+
+services:
+  omjapp:
+    image: ghcr.io/morphlogic/openmicjoyme:${OMJ_TAG:-local}
+    restart: unless-stopped
+
+    environment:
+      # App
+      - NODE_ENV=production
+      - PORT=4000
+
+      # Reverse proxy (nginx-proxy stack on external network: proxy)
+      - VIRTUAL_HOST=openmicjoy.me,www.openmicjoy.me
+      - VIRTUAL_PORT=4000
+      - LETSENCRYPT_HOST=openmicjoy.me,www.openmicjoy.me
+      - LETSENCRYPT_EMAIL=admin@openmicjoy.me
+
+      # Contact mail (SendGrid)
+      - SMTP_HOST=smtp.sendgrid.net
+      - SMTP_PORT=587
+      - SMTP_USER=apikey
+      - SMTP_PASS_FILE=/srv/secrets/omj_sendgrid_api_key
+      - CONTACT_TO=sam@samshaw.us
+      - CONTACT_FROM=OMJ Contact <sam@samshaw.us>
+
+    expose:
+      - "4000"
+
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://127.0.0.1:4000/health', r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\""]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+    # Bind the exact secret path (read-only)
+    volumes:
+      - /srv/secrets/omj_sendgrid_api_key:/srv/secrets/omj_sendgrid_api_key:ro
+
+    networks:
+      - proxy
+
 networks:
   proxy:
     external: true
     name: proxy
-
-services:
-  omjapp:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: omjapp:2025-11-07
-    container_name: omjapp
-    restart: unless-stopped
-    networks: [proxy]
-    env_file:
-      - .env.omjapp
-    secrets:
-      - omj_sendgrid_api_key
-    environment:
-      - NODE_ENV=production
-      - VIRTUAL_HOST=openmicjoy.me,openmicjoy.com,www.openmicjoy.me,www.openmicjoy.com
-      - LETSENCRYPT_HOST=openmicjoy.me,openmicjoy.com,www.openmicjoy.me,www.openmicjoy.com
-      - VIRTUAL_PORT=4000
-      - SMTP_PASS_FILE=/run/secrets/omj_sendgrid_api_key
-    expose:
-      - "4000"
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:4000/ >/dev/null 2>&1 || exit 1"]
-      interval: 20s
-      timeout: 3s
-      retries: 5
-      start_period: 20s
-
-secrets:
-  omj_sendgrid_api_key:
-    file: /srv/secrets/omj_sendgrid_api_key

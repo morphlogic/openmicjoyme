@@ -1,11 +1,20 @@
 {
   "name": "openmicjoy",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20.11.1",
+    "npm": ">=10.5.0"
+  },
   "scripts": {
     "ng": "ng",
     "start": "ng serve -o",
-    "build": "ng build --configuration production"
+    "build": "ng build --configuration production",
+    "clean": "git clean -fdX && git reset --hard",
+    "serve:node": "node server.cjs",
+    "docker:build": "docker build -t ghcr.io/morphlogic/openmicjoyme:local .",
+    "docker:run": "docker run --rm -p 4000:4000 ghcr.io/morphlogic/openmicjoyme:local"
   },
   "dependencies": {
     "@angular/animations": "^18.2.0",
@@ -18,10 +27,15 @@
     "@angular/platform-browser-dynamic": "^18.2.0",
     "@angular/router": "^18.2.0",
     "@angular/service-worker": "^18.2.0",
+    "date-fns": "^3.6.0",
     "rxjs": "^7.8.1",
     "tslib": "^2.6.2",
     "zone.js": "^0.14.10",
-    "date-fns": "^3.6.0"
+
+    "express": "^4.19.2",
+    "compression": "^1.7.4",
+    "nodemailer": "^6.9.14",
+    "express-rate-limit": "^7.4.0"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^18.2.0",
