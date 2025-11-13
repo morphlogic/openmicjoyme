@@ -324,7 +324,9 @@ interface ContactFormValues {
       background: rgba(255,138,128,.12);
     }
     fieldset.invalid-field legend { color: #ffb4a9; }
-    .error-pulse { animation: errorPulse .7s ease; }
+    .error-pulse {
+      animation: errorPulse .7s ease;
+    }
     @keyframes errorPulse {
       0% { box-shadow: 0 0 0 0 rgba(255,138,128,.4); }
       100% { box-shadow: 0 0 0 20px rgba(255,138,128,0); }
