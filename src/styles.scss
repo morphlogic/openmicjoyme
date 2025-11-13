@@ -30,26 +30,30 @@ body {
   color: var(--color-text);
   line-height: 1.65;
   background-image:
-    linear-gradient(
-      0deg,
-      rgba(0, 0, 0, 0.85),
-      rgba(0, 0, 0, 0.85)
-    ),
+    linear-gradient(0deg, rgba(0, 0, 0, 0.82), rgba(0, 0, 0, 0.82)),
     repeating-linear-gradient(
       0deg,
-      rgba(140, 31, 45, 0.55) 0,
-      rgba(140, 31, 45, 0.55) 22px,
-      rgba(191, 59, 59, 0.35) 22px,
-      rgba(191, 59, 59, 0.35) 44px
+      rgba(219, 112, 112, 0.55) 0,
+      rgba(219, 112, 112, 0.55) 48px,
+      rgba(191, 80, 80, 0.55) 48px,
+      rgba(191, 80, 80, 0.55) 96px
     ),
     repeating-linear-gradient(
       90deg,
-      rgba(140, 31, 45, 0.5) 0,
-      rgba(140, 31, 45, 0.5) 70px,
-      rgba(40, 0, 5, 0.6) 70px,
-      rgba(40, 0, 5, 0.6) 75px
+      rgba(50, 15, 20, 0.45) 0,
+      rgba(50, 15, 20, 0.45) 6px,
+      transparent 6px,
+      transparent 120px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(50, 15, 20, 0.35) 0,
+      rgba(50, 15, 20, 0.35) 6px,
+      transparent 6px,
+      transparent 120px
     );
-  background-size: cover, 100% 44px, 75px 100%;
+  background-size: cover, 120px 96px, 120px 96px, 120px 96px;
+  background-position: center, 0 0, 0 0, 60px 48px;
 }
 
 a {
