@@ -50,9 +50,9 @@ const isBot = (b) => typeof b?.honey === "string" && b.honey.trim() !== "";
 
 const ROLE_LABELS = {
   comedian: "Comedian",
-  showrunner: "Showrunner",
-  venueOwner: "Venue Owner",
-  other: "Other"
+  showrunner: "Host / MC",
+  venueOwner: "Venue / Show Rep",
+  other: "Comedy Fan"
 };
 const EVENT_ROLE_SET = new Set(["comedian", "showrunner", "venueOwner"]);
 
@@ -101,8 +101,9 @@ const VALID_MONTHLY_PATTERNS = new Set(Object.keys(MONTHLY_PATTERN_LABELS));
 const VALID_ORDINALS = new Set(Object.keys(ORDINAL_LABELS));
 const VALID_WEEKDAYS = new Set(Object.keys(WEEKDAY_LABELS));
 
-const EVENT_STORAGE_DIR = path.resolve(process.env.EVENT_STORAGE_DIR || "data");
-const EVENT_STORAGE_FILE = path.join(EVENT_STORAGE_DIR, "event-submissions.json");
+const DATA_STORAGE_DIR = path.resolve(process.env.EVENT_STORAGE_DIR || "data");
+const CONTACT_STORAGE_FILE = path.join(DATA_STORAGE_DIR, "contact-submissions.json");
+const EVENT_STORAGE_FILE = path.join(DATA_STORAGE_DIR, "event-submissions.json");
 
 const passFromFile = process.env.SMTP_PASS_FILE && (() => {
   try { return fs.readFileSync(process.env.SMTP_PASS_FILE, "utf8").trim(); } catch { return ""; }
@@ -169,6 +170,9 @@ function validateEventPayload(payload) {
   if (!payload.eventName) return "missing_event_name";
   if (!payload.firstEventDate) return "missing_event_date";
   if (!payload.frequency) return "missing_frequency";
+  const eventDate = new Date(payload.firstEventDate);
+  if (Number.isNaN(eventDate.getTime())) return "invalid_event_date";
+  if (eventDate.getTime() < Date.now()) return "past_event_date";
 
   if (payload.frequency === "monthly") {
     if (!payload.monthlyPattern) return "missing_monthly_pattern";
@@ -251,8 +255,12 @@ function buildContactEmail(payload, includeEvent) {
   }
 
   lines.push("");
-  lines.push("Message:");
-  lines.push(...indentBlock(payload.message || "(no message provided)"));
+  lines.push("Additional details:");
+  if (payload.message) {
+    lines.push(...indentBlock(payload.message));
+  } else {
+    lines.push("  (not provided)");
+  }
   return lines.join("\n");
 }
 
@@ -262,14 +270,10 @@ function toIsoOrNull(value) {
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
-function createEventRecord(payload) {
+function buildEventSnapshot(payload) {
   return {
-    id: randomUUID(),
-    submittedAt: new Date().toISOString(),
-    role: payload.role,
-    eventRequestType: payload.eventRequestType,
-    eventName: payload.eventName,
-    eventDescription: payload.eventDescription,
+    name: payload.eventName,
+    description: payload.eventDescription,
     firstEventDateLocal: payload.firstEventDate,
     firstEventDateIso: toIsoOrNull(payload.firstEventDate),
     frequency: payload.frequency,
@@ -277,7 +281,42 @@ function createEventRecord(payload) {
     monthlyOrdinal: payload.monthlyOrdinal,
     monthlyWeekday: payload.monthlyWeekday,
     monthlyMonthday: payload.monthlyMonthday,
-    monthlyOtherText: payload.monthlyOtherText,
+    monthlyOtherText: payload.monthlyOtherText
+  };
+}
+
+function createContactRecord(payload, includeEvent) {
+  return {
+    id: randomUUID(),
+    submittedAt: new Date().toISOString(),
+    contact: {
+      name: payload.name,
+      email: payload.email,
+      role: payload.role
+    },
+    eventRequestType: payload.eventRequestType,
+    message: payload.message,
+    event: includeEvent ? buildEventSnapshot(payload) : null
+  };
+}
+
+function createEventRecord(payload) {
+  const snapshot = buildEventSnapshot(payload);
+  return {
+    id: randomUUID(),
+    submittedAt: new Date().toISOString(),
+    role: payload.role,
+    eventRequestType: payload.eventRequestType,
+    eventName: snapshot.name,
+    eventDescription: snapshot.description,
+    firstEventDateLocal: snapshot.firstEventDateLocal,
+    firstEventDateIso: snapshot.firstEventDateIso,
+    frequency: snapshot.frequency,
+    monthlyPattern: snapshot.monthlyPattern,
+    monthlyOrdinal: snapshot.monthlyOrdinal,
+    monthlyWeekday: snapshot.monthlyWeekday,
+    monthlyMonthday: snapshot.monthlyMonthday,
+    monthlyOtherText: snapshot.monthlyOtherText,
     contact: {
       name: payload.name,
       email: payload.email
@@ -286,10 +325,10 @@ function createEventRecord(payload) {
   };
 }
 
-async function persistEventSubmission(record) {
+async function persistJsonRecord(filePath, record, label) {
   try {
-    await fsp.mkdir(EVENT_STORAGE_DIR, { recursive: true });
-    const existing = await fsp.readFile(EVENT_STORAGE_FILE, "utf8").catch(() => "[]");
+    await fsp.mkdir(DATA_STORAGE_DIR, { recursive: true });
+    const existing = await fsp.readFile(filePath, "utf8").catch(() => "[]");
     let parsed = [];
     try {
       parsed = JSON.parse(existing);
@@ -298,10 +337,18 @@ async function persistEventSubmission(record) {
       parsed = [];
     }
     parsed.push(record);
-    await fsp.writeFile(EVENT_STORAGE_FILE, JSON.stringify(parsed, null, 2));
+    await fsp.writeFile(filePath, JSON.stringify(parsed, null, 2));
   } catch (err) {
-    console.error("failed to persist event submission", err.message);
+    console.error(`failed to persist ${label}`, err.message);
   }
+}
+
+async function persistContactSubmission(record) {
+  await persistJsonRecord(CONTACT_STORAGE_FILE, record, "contact submission");
+}
+
+async function persistEventSubmission(record) {
+  await persistJsonRecord(EVENT_STORAGE_FILE, record, "event submission");
 }
 
 app.post("/api/contact", limiter, async (req, res) => {
@@ -310,7 +357,6 @@ app.post("/api/contact", limiter, async (req, res) => {
     if (isBot(incoming)) return res.status(202).json({ ok: true });
 
     const payload = normalizeContactPayload(incoming);
-    if (!payload.message) return res.status(400).json({ ok: false, error: "bad_request" });
 
     const totalLength = [
       payload.name,
@@ -323,6 +369,12 @@ app.post("/api/contact", limiter, async (req, res) => {
     if (totalLength > 16000) return res.status(400).json({ ok: false, error: "payload_too_large" });
 
     const includeEvent = needsEventDetails(payload);
+    if (!includeEvent && !payload.message) {
+      return res.status(400).json({ ok: false, error: "bad_request" });
+    }
+    if (payload.message && payload.message.length < 5) {
+      return res.status(400).json({ ok: false, error: "message_too_short" });
+    }
     if (includeEvent) {
       const validationError = validateEventPayload(payload);
       if (validationError) return res.status(400).json({ ok: false, error: validationError });
@@ -339,9 +391,11 @@ app.post("/api/contact", limiter, async (req, res) => {
       text
     });
 
+    const persistTasks = [persistContactSubmission(createContactRecord(payload, includeEvent))];
     if (includeEvent) {
-      await persistEventSubmission(createEventRecord(payload));
+      persistTasks.push(persistEventSubmission(createEventRecord(payload)));
     }
+    await Promise.all(persistTasks);
 
     res.status(202).json({ ok: true });
   } catch (err) {
