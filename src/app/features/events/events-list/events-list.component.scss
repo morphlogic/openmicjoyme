@@ -12,6 +12,48 @@ h1 {
   margin-bottom: 1.5rem;
 }
 
+.week-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.week-nav__btn {
+  background: transparent;
+  border: none;
+  color: var(--color-white);
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.5rem;
+  cursor: pointer;
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.week-nav__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.week-nav__btn:not(:disabled):hover {
+  color: var(--color-accent, #fcecc1);
+}
+
+.week-nav__range {
+  flex: 1;
+  text-align: center;
+  font-size: 0.95rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
 .events-hero__icon {
   width: 72px;
   height: 72px;
