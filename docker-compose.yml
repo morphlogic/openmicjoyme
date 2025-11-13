@@ -12,9 +12,9 @@ services:
       - PORT=4000
 
       # Reverse proxy (nginx-proxy stack on external network: proxy)
-      - VIRTUAL_HOST=openmicjoy.me,www.openmicjoy.me
+      - VIRTUAL_HOST=openmicjoy.me,www.openmicjoy.me,openmicjoy.com,www.openmicjoy.com
       - VIRTUAL_PORT=4000
-      - LETSENCRYPT_HOST=openmicjoy.me,www.openmicjoy.me
+      - LETSENCRYPT_HOST=openmicjoy.me,www.openmicjoy.me,openmicjoy.com,www.openmicjoy.com
       - LETSENCRYPT_EMAIL=admin@openmicjoy.me
 
       # Contact mail (SendGrid)
