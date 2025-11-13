@@ -16,6 +16,7 @@ Live schedule for DFW open mics, built with Angular and served via a lightweight
 
 ## Docker run
 
+- Running `docker compose up --build -d` works well.
 - Copy `.env.omjapp.example` to `.env.omjapp` and adjust non-secret values as needed.
 - `docker-compose*.yml` loads that file via `env_file`, so values such as `ADMIN_API_KEY`, `CONTACT_TO`, etc. become environment variables inside the container without exporting them manually.
 - Build and start the container with `docker compose -f docker-compose.omjapp.yml up -d` (the default file mirrors prod wiring).
