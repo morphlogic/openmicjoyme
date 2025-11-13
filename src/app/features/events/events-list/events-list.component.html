@@ -1,4 +1,22 @@
 <section *ngIf="vm$ | async as vm">
+  <div class="events-hero">
+    <div class="events-hero__icon" aria-hidden="true">
+      <svg viewBox="0 0 64 64" role="presentation" focusable="false">
+        <circle class="events-icon__person" cx="23" cy="26" r="12" />
+        <path class="events-icon__mic" d="M36 32 52 16" />
+        <path class="events-icon__mic" d="M50 14 60 24 44 40" />
+        <path class="events-icon__person" d="M24 40 18 56" />
+        <path class="events-icon__stand" d="M40 34v18" />
+        <path class="events-icon__stand" d="M34 56h12" />
+        <path class="events-icon__mic" d="M36 31 40 34" />
+      </svg>
+    </div>
+    <div class="events-hero__text">
+      <h1>Open Mic Joy !</h1>
+      <p>Events</p>
+    </div>
+  </div>
+
   <ng-container *ngFor="let d of vm.days">
     <h2>{{ weekdayLabel[d.weekday] }} — {{ d.date | date:'MMM d' }}</h2>
     <div class="grid">

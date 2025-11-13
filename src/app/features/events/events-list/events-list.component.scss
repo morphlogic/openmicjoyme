@@ -1,3 +1,52 @@
+h1 {
+  font-size: 2.2rem;
+  margin: 0;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.events-hero {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.events-hero__icon {
+  width: 72px;
+  height: 72px;
+}
+
+.events-hero__icon svg {
+  width: 100%;
+  height: 100%;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.5;
+  fill: none;
+  stroke: currentColor;
+}
+
+.events-hero__icon .events-icon__person {
+  stroke: #f6f2ea;
+}
+
+.events-hero__icon .events-icon__mic {
+  stroke: #dadce5;
+}
+
+.events-hero__icon .events-icon__stand {
+  stroke: #8d93a5;
+}
+
+.events-hero__text p {
+  margin: 0.15rem 0 0;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));

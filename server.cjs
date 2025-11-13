@@ -101,8 +101,9 @@ const VALID_MONTHLY_PATTERNS = new Set(Object.keys(MONTHLY_PATTERN_LABELS));
 const VALID_ORDINALS = new Set(Object.keys(ORDINAL_LABELS));
 const VALID_WEEKDAYS = new Set(Object.keys(WEEKDAY_LABELS));
 
-const EVENT_STORAGE_DIR = path.resolve(process.env.EVENT_STORAGE_DIR || "data");
-const EVENT_STORAGE_FILE = path.join(EVENT_STORAGE_DIR, "event-submissions.json");
+const DATA_STORAGE_DIR = path.resolve(process.env.EVENT_STORAGE_DIR || "data");
+const CONTACT_STORAGE_FILE = path.join(DATA_STORAGE_DIR, "contact-submissions.json");
+const EVENT_STORAGE_FILE = path.join(DATA_STORAGE_DIR, "event-submissions.json");
 
 const passFromFile = process.env.SMTP_PASS_FILE && (() => {
   try { return fs.readFileSync(process.env.SMTP_PASS_FILE, "utf8").trim(); } catch { return ""; }
@@ -269,14 +270,10 @@ function toIsoOrNull(value) {
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
-function createEventRecord(payload) {
+function buildEventSnapshot(payload) {
   return {
-    id: randomUUID(),
-    submittedAt: new Date().toISOString(),
-    role: payload.role,
-    eventRequestType: payload.eventRequestType,
-    eventName: payload.eventName,
-    eventDescription: payload.eventDescription,
+    name: payload.eventName,
+    description: payload.eventDescription,
     firstEventDateLocal: payload.firstEventDate,
     firstEventDateIso: toIsoOrNull(payload.firstEventDate),
     frequency: payload.frequency,
@@ -284,7 +281,42 @@ function createEventRecord(payload) {
     monthlyOrdinal: payload.monthlyOrdinal,
     monthlyWeekday: payload.monthlyWeekday,
     monthlyMonthday: payload.monthlyMonthday,
-    monthlyOtherText: payload.monthlyOtherText,
+    monthlyOtherText: payload.monthlyOtherText
+  };
+}
+
+function createContactRecord(payload, includeEvent) {
+  return {
+    id: randomUUID(),
+    submittedAt: new Date().toISOString(),
+    contact: {
+      name: payload.name,
+      email: payload.email,
+      role: payload.role
+    },
+    eventRequestType: payload.eventRequestType,
+    message: payload.message,
+    event: includeEvent ? buildEventSnapshot(payload) : null
+  };
+}
+
+function createEventRecord(payload) {
+  const snapshot = buildEventSnapshot(payload);
+  return {
+    id: randomUUID(),
+    submittedAt: new Date().toISOString(),
+    role: payload.role,
+    eventRequestType: payload.eventRequestType,
+    eventName: snapshot.name,
+    eventDescription: snapshot.description,
+    firstEventDateLocal: snapshot.firstEventDateLocal,
+    firstEventDateIso: snapshot.firstEventDateIso,
+    frequency: snapshot.frequency,
+    monthlyPattern: snapshot.monthlyPattern,
+    monthlyOrdinal: snapshot.monthlyOrdinal,
+    monthlyWeekday: snapshot.monthlyWeekday,
+    monthlyMonthday: snapshot.monthlyMonthday,
+    monthlyOtherText: snapshot.monthlyOtherText,
     contact: {
       name: payload.name,
       email: payload.email
@@ -293,10 +325,10 @@ function createEventRecord(payload) {
   };
 }
 
-async function persistEventSubmission(record) {
+async function persistJsonRecord(filePath, record, label) {
   try {
-    await fsp.mkdir(EVENT_STORAGE_DIR, { recursive: true });
-    const existing = await fsp.readFile(EVENT_STORAGE_FILE, "utf8").catch(() => "[]");
+    await fsp.mkdir(DATA_STORAGE_DIR, { recursive: true });
+    const existing = await fsp.readFile(filePath, "utf8").catch(() => "[]");
     let parsed = [];
     try {
       parsed = JSON.parse(existing);
@@ -305,10 +337,18 @@ async function persistEventSubmission(record) {
       parsed = [];
     }
     parsed.push(record);
-    await fsp.writeFile(EVENT_STORAGE_FILE, JSON.stringify(parsed, null, 2));
+    await fsp.writeFile(filePath, JSON.stringify(parsed, null, 2));
   } catch (err) {
-    console.error("failed to persist event submission", err.message);
+    console.error(`failed to persist ${label}`, err.message);
   }
+}
+
+async function persistContactSubmission(record) {
+  await persistJsonRecord(CONTACT_STORAGE_FILE, record, "contact submission");
+}
+
+async function persistEventSubmission(record) {
+  await persistJsonRecord(EVENT_STORAGE_FILE, record, "event submission");
 }
 
 app.post("/api/contact", limiter, async (req, res) => {
@@ -329,7 +369,9 @@ app.post("/api/contact", limiter, async (req, res) => {
     if (totalLength > 16000) return res.status(400).json({ ok: false, error: "payload_too_large" });
 
     const includeEvent = needsEventDetails(payload);
-    if (!includeEvent && !payload.message) return res.status(400).json({ ok: false, error: "bad_request" });
+    if (!includeEvent && !payload.message) {
+      return res.status(400).json({ ok: false, error: "bad_request" });
+    }
     if (payload.message && payload.message.length < 5) {
       return res.status(400).json({ ok: false, error: "message_too_short" });
     }
@@ -349,9 +391,11 @@ app.post("/api/contact", limiter, async (req, res) => {
       text
     });
 
+    const persistTasks = [persistContactSubmission(createContactRecord(payload, includeEvent))];
     if (includeEvent) {
-      await persistEventSubmission(createEventRecord(payload));
+      persistTasks.push(persistEventSubmission(createEventRecord(payload)));
     }
+    await Promise.all(persistTasks);
 
     res.status(202).json({ ok: true });
   } catch (err) {

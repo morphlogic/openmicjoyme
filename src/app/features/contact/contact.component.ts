@@ -364,7 +364,7 @@ export class ContactComponent {
   ] as const;
 
   readonly monthlyPatternOptions = [
-    { value: 'weekday', label: 'Certain weekday of each month' },
+    { value: 'weekday', label: 'Certain weekday of the month' },
     { value: 'date', label: 'Specific date each month' },
     { value: 'other', label: 'Other' }
   ] as const;
