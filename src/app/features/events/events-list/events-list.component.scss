@@ -24,16 +24,26 @@ h1 {
   flex-wrap: wrap;
 }
 
+.week-nav__controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .week-nav__btn {
   background: transparent;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
   color: var(--color-white);
   font-size: 0.85rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  padding: 0.35rem 0.5rem;
+  padding: 0.35rem 0.75rem;
   cursor: pointer;
-  transition: color 0.2s ease, opacity 0.2s ease;
+  transition: color 0.2s ease, opacity 0.2s ease, border-color 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .week-nav__btn:disabled {
@@ -43,6 +53,7 @@ h1 {
 
 .week-nav__btn:not(:disabled):hover {
   color: var(--color-accent, #fcecc1);
+  border-color: var(--color-accent, #fcecc1);
 }
 
 .week-nav__range {
@@ -52,6 +63,19 @@ h1 {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--color-text-muted);
+}
+
+.week-nav__label--compact {
+  display: none;
+  letter-spacing: 0.2em;
+}
+
+.week-nav__label {
+  display: inline;
+}
+
+.week-nav__chevron {
+  font-size: 1rem;
 }
 
 .events-hero__icon {
@@ -105,4 +129,48 @@ h2 {
 
 p {
   color: var(--color-text-muted);
+}
+
+@media (max-width: 640px) {
+  .week-nav {
+    flex-direction: column;
+    align-items: center;
+    border: none;
+    padding: 0;
+  }
+
+  .week-nav__controls {
+    width: 100%;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .week-nav__btn {
+    flex: 1;
+    justify-content: center;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .week-nav__label {
+    display: none;
+  }
+
+  .week-nav__label--compact {
+    display: inline;
+  }
+
+  .week-nav__chevron {
+    display: none;
+  }
+
+  .week-nav__range {
+    width: 50%;
+    min-width: 220px;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    padding: 0.35rem 0.5rem;
+    font-size: 0.8rem;
+    margin-top: 0.75rem;
+  }
 }
