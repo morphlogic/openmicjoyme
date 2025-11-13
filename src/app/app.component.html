@@ -1,5 +1,5 @@
 <mat-toolbar color="primary" class="app-toolbar">
-  <a class="brand" routerLink="/" aria-label="OMJ home">
+  <a class="brand" routerLink="/" aria-label="OMJ home" (click)="handleBrandActivation()">
     <span class="brand-icon" aria-hidden="true">
       <svg viewBox="0 0 64 64" role="presentation" focusable="false">
         <circle class="brand-person" cx="23" cy="26" r="12" />
@@ -17,6 +17,22 @@
   <span class="spacer"></span>
 
   <nav class="nav-icon-list" aria-label="Primary">
+    <a
+      *ngIf="adminNavEnabled"
+      mat-icon-button
+      routerLink="/admin"
+      routerLinkActive="active"
+      aria-label="Admin workspace"
+    >
+      <span class="nav-icon" aria-hidden="true">
+        <svg viewBox="0 0 32 32" role="presentation" focusable="false">
+          <path d="M16 4 6 8v7c0 5.5 3.8 10.6 10 13 6.2-2.4 10-7.5 10-13V8z" />
+          <path d="M12 16l2 3 6-7" />
+        </svg>
+      </span>
+      <span class="sr-only">Admin</span>
+    </a>
+
     <a
       mat-icon-button
       routerLink="/"

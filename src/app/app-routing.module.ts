@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { EventsListComponent } from './features/events/events-list/events-list.component';
 import { AboutComponent } from './features/about/about.component';
+import { AdminDashboardComponent } from './features/admin/admin-dashboard.component';
 
 const routes: Routes = [
   { path: '', component: EventsListComponent },
@@ -11,6 +12,7 @@ const routes: Routes = [
       import('./features/contact/contact.component')
         .then(m => m.ContactComponent)
   },
+  { path: 'admin', component: AdminDashboardComponent },
   { path: '**', redirectTo: '' },
 ];
 

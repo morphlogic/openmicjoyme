@@ -3,6 +3,9 @@ services:
     image: ghcr.io/morphlogic/openmicjoyme:${OMJ_TAG:-local}
     restart: unless-stopped
 
+    env_file:
+      - .env.omjapp
+
     environment:
       # App
       - NODE_ENV=production

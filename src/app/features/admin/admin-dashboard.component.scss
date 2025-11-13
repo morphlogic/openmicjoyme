@@ -1,0 +1,141 @@
+.admin-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.admin-header h1 {
+  margin-bottom: 0.3rem;
+}
+
+.panel {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 1.5rem;
+}
+
+.passcode-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.passcode-form input {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  padding: 0.65rem 0.8rem;
+  color: inherit;
+  font-size: 1rem;
+}
+
+.queue {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.queue-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.status {
+  font-size: 0.95rem;
+  opacity: 0.8;
+}
+
+.status.empty {
+  font-style: italic;
+}
+
+.submission-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 1.3rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.submission-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.submission-header h3 {
+  margin: 0;
+}
+
+.subline {
+  margin: 0.2rem 0 0;
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+.chip {
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 0.2rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 0.9rem 1.2rem;
+}
+
+.meta-grid dt {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.7;
+  margin-bottom: 0.2rem;
+}
+
+.meta-grid dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.description,
+.message {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+}
+
+.description h4,
+.message h4 {
+  margin: 0 0 0.4rem;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.error {
+  color: #ff9da4;
+  font-size: 0.9rem;
+}
+
+.hint {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+@media (max-width: 640px) {
+  .submission-card {
+    padding: 1rem;
+  }
+}

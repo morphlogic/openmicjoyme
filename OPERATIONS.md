@@ -12,6 +12,8 @@
 |------|------|------------|-------------|
 | SendGrid API Key | File | `/srv/secrets/omj_sendgrid_api_key` | `/srv/secrets/omj_sendgrid_api_key:ro` |
 
+- `ADMIN_API_KEY` (env) enables the hidden admin API; keep it in `.env.omjapp` or a Docker secret if you prefer.
+
 ### Permissions
 ```bash
 sudo chmod 600 /srv/secrets/omj_sendgrid_api_key

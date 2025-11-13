@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule } from '@angular/common/http';
+import { ReactiveFormsModule } from '@angular/forms';
 
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
@@ -21,13 +22,15 @@ import { EventCardComponent } from './features/events/event-card/event-card.comp
 import { AboutComponent } from './features/about/about.component';
 import { ContactComponent } from './features/contact/contact.component';
 import { ToastContainerComponent } from './core/components/toast-container/toast-container.component';
+import { AdminDashboardComponent } from './features/admin/admin-dashboard.component';
 
 @NgModule({
-  declarations: [AppComponent, EventsListComponent, EventCardComponent, AboutComponent],
+  declarations: [AppComponent, EventsListComponent, EventCardComponent, AboutComponent, AdminDashboardComponent],
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
     HttpClientModule,
+    ReactiveFormsModule,
     AppRoutingModule,
     MatToolbarModule,
     MatIconModule,

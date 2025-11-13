@@ -1,0 +1,86 @@
+<section class="admin-dashboard">
+  <header class="admin-header">
+    <h1>Admin workspace</h1>
+    <p>Review event requests from the contact form before publishing them to the public schedule.</p>
+  </header>
+
+  <section class="panel" *ngIf="!unlocked()">
+    <h2>Unlock queue</h2>
+    <p class="hint">Enter the shared admin key (matches the <code>ADMIN_API_KEY</code> env var) to view submissions.</p>
+    <form [formGroup]="passcodeForm" (ngSubmit)="unlock()" class="passcode-form">
+      <label for="admin-passcode">Admin key</label>
+      <input
+        id="admin-passcode"
+        type="password"
+        formControlName="passcode"
+        autocomplete="off"
+        spellcheck="false"
+        [disabled]="loading()"
+        placeholder="••••••••"
+      />
+      <p class="error" *ngIf="authError()">{{ authError() }}</p>
+      <button mat-flat-button color="accent" type="submit" [disabled]="loading()">Unlock queue</button>
+    </form>
+  </section>
+
+  <section class="queue" *ngIf="unlocked()">
+    <header class="queue-header">
+      <div>
+        <h2>Pending submissions</h2>
+        <p>{{ hasEntries() ? 'Newest first' : 'Waiting for the next request...' }}</p>
+      </div>
+      <button mat-stroked-button type="button" (click)="refresh()" [disabled]="loading()">Refresh</button>
+    </header>
+
+    <div class="status" *ngIf="loading()">Loading submissions…</div>
+    <div class="status empty" *ngIf="!loading() && !hasEntries()">
+      All caught up! New contact-form requests will appear here automatically once the admin API receives them.
+    </div>
+
+    <article class="submission-card" *ngFor="let submission of entries(); trackBy: trackBySubmissionId">
+      <header class="submission-header">
+        <div>
+          <h3>{{ submission.eventName || '(Unnamed event)' }}</h3>
+          <p class="subline">
+            {{ roleLabel(submission.role) }} • {{ requestLabel(submission.eventRequestType) }}
+          </p>
+        </div>
+        <span class="chip">{{ requestLabel(submission.eventRequestType) }}</span>
+      </header>
+
+      <dl class="meta-grid">
+        <div>
+          <dt>Submitted</dt>
+          <dd>{{ formatDate(submission.submittedAt) }}</dd>
+        </div>
+        <div>
+          <dt>Next show</dt>
+          <dd>{{ formatDate(submission.firstEventDateLocal || submission.firstEventDateIso) }}</dd>
+        </div>
+        <div>
+          <dt>Cadence</dt>
+          <dd>{{ cadenceText(submission) }}</dd>
+        </div>
+        <div>
+          <dt>Contact</dt>
+          <dd>
+            {{ submission.contact?.name || 'Name missing' }}
+            <ng-container *ngIf="submission.contact?.email">
+              • <a [href]="'mailto:' + submission.contact.email">{{ submission.contact.email }}</a>
+            </ng-container>
+          </dd>
+        </div>
+      </dl>
+
+      <section class="description" *ngIf="submission.eventDescription">
+        <h4>Event description</h4>
+        <p>{{ submission.eventDescription }}</p>
+      </section>
+
+      <section class="message" *ngIf="submission.message">
+        <h4>Additional notes</h4>
+        <p>{{ submission.message }}</p>
+      </section>
+    </article>
+  </section>
+</section>

@@ -7,6 +7,8 @@ const fs = require("fs");
 const fsp = require("fs/promises");
 const { randomUUID } = require("crypto");
 
+bootstrapEnv();
+
 const app = express();
 const PORT = process.env.PORT || 4000;
 
@@ -113,7 +115,8 @@ const {
   SMTP_PORT = "587",
   SMTP_USER = "apikey",
   CONTACT_TO = "sam@samshaw.us",
-  CONTACT_FROM = "OMJ Contact <no-reply@openmicjoy.me>"
+  CONTACT_FROM = "OMJ Contact <no-reply@openmicjoy.me>",
+  ADMIN_API_KEY = ""
 } = process.env;
 const SMTP_PASS = process.env.SMTP_PASS || passFromFile || "";
 
@@ -351,6 +354,33 @@ async function persistEventSubmission(record) {
   await persistJsonRecord(EVENT_STORAGE_FILE, record, "event submission");
 }
 
+async function readJsonArray(filePath) {
+  try {
+    const raw = await fsp.readFile(filePath, "utf8");
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    if (err?.code === "ENOENT") return [];
+    console.error(`failed to read ${filePath}`, err.message);
+    return [];
+  }
+}
+
+async function readEventSubmissions() {
+  return readJsonArray(EVENT_STORAGE_FILE);
+}
+
+function requireAdminKey(req, res, next) {
+  if (!ADMIN_API_KEY) {
+    return res.status(503).json({ ok: false, error: "admin_disabled" });
+  }
+  const provided = req.get("x-omj-admin-key") || "";
+  if (!provided || provided !== ADMIN_API_KEY) {
+    return res.status(401).json({ ok: false, error: "unauthorized" });
+  }
+  next();
+}
+
 app.post("/api/contact", limiter, async (req, res) => {
   try {
     const incoming = req.body || {};
@@ -404,6 +434,21 @@ app.post("/api/contact", limiter, async (req, res) => {
   }
 });
 
+app.get("/api/admin/event-submissions", requireAdminKey, async (_req, res) => {
+  try {
+    const entries = await readEventSubmissions();
+    const sorted = [...entries].sort((a, b) => {
+      const aTime = new Date(a?.submittedAt || 0).getTime();
+      const bTime = new Date(b?.submittedAt || 0).getTime();
+      return bTime - aTime;
+    });
+    res.status(200).json({ ok: true, items: sorted });
+  } catch (err) {
+    console.error("admin event-submissions error:", err.message);
+    res.status(500).json({ ok: false, error: "server_error" });
+  }
+});
+
 // ---------- Static files (no index) ----------
 if (hasDist) {
   app.use(express.static(distRoot, { index: false, fallthrough: true }));
@@ -419,3 +464,33 @@ app.get(/.*/, (_req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ OMJ serving ${hasDist ? distRoot : "(no dist)"} on :${PORT}`);
 });
+
+function bootstrapEnv() {
+  const envFiles = [".env", ".env.omjapp"];
+  for (const file of envFiles) {
+    const abs = path.resolve(file);
+    if (!fs.existsSync(abs)) continue;
+    try {
+      const contents = fs.readFileSync(abs, "utf8");
+      applyEnvFile(contents);
+    } catch (err) {
+      console.warn(`⚠️ unable to read ${file}:`, err.message);
+    }
+  }
+}
+
+function applyEnvFile(source) {
+  const lines = source.split(/\r?\n/);
+  for (const raw of lines) {
+    if (!raw || /^\s*#/.test(raw)) continue;
+    const idx = raw.indexOf("=");
+    if (idx === -1) continue;
+    const key = raw.slice(0, idx).trim();
+    if (!key || process.env[key] !== undefined) continue;
+    let value = raw.slice(idx + 1).trim();
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    }
+    process.env[key] = value;
+  }
+}

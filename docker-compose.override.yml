@@ -1,5 +1,7 @@
 services:
   omjapp:
+    env_file:
+      - .env.omjapp
     build:
       context: .
       target: runtime
