@@ -17,6 +17,30 @@
     </div>
   </div>
 
+  <div class="week-nav" aria-label="Week navigation">
+    <button
+      type="button"
+      class="week-nav__btn"
+      (click)="shiftWeek(-1)"
+      [disabled]="disablePrev"
+      aria-label="View previous week"
+    >
+      &lt; Previous Week
+    </button>
+    <div class="week-nav__range">
+      {{ vm.rangeStart | date:'MMM d' }} – {{ vm.rangeEnd | date:'MMM d' }}
+    </div>
+    <button
+      type="button"
+      class="week-nav__btn"
+      (click)="shiftWeek(1)"
+      [disabled]="disableNext"
+      aria-label="View next week"
+    >
+      Next Week &gt;
+    </button>
+  </div>
+
   <ng-container *ngFor="let d of vm.days">
     <h2>{{ weekdayLabel[d.weekday] }} — {{ d.date | date:'MMM d' }}</h2>
     <div class="grid">

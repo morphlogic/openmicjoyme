@@ -6,6 +6,8 @@ const path = require("path");
 const fs = require("fs");
 const fsp = require("fs/promises");
 const { randomUUID } = require("crypto");
+const { startOfWeek, addDays } = require("date-fns");
+const { createSqliteBridge } = require("./lib/sqlite-bridge.cjs");
 
 bootstrapEnv();
 
@@ -104,8 +106,14 @@ const VALID_ORDINALS = new Set(Object.keys(ORDINAL_LABELS));
 const VALID_WEEKDAYS = new Set(Object.keys(WEEKDAY_LABELS));
 
 const DATA_STORAGE_DIR = path.resolve(process.env.EVENT_STORAGE_DIR || "data");
-const CONTACT_STORAGE_FILE = path.join(DATA_STORAGE_DIR, "contact-submissions.json");
-const EVENT_STORAGE_FILE = path.join(DATA_STORAGE_DIR, "event-submissions.json");
+const SQLITE_DB_FILE = process.env.SQLITE_DB_FILE || "omj.sqlite";
+const SQLITE_DB_PATH = path.join(DATA_STORAGE_DIR, SQLITE_DB_FILE);
+const EVENT_SEED_FILE = path.resolve(process.env.EVENT_SEED_FILE || "src/assets/data/events.json");
+fs.mkdirSync(DATA_STORAGE_DIR, { recursive: true });
+const sqliteBridge = createSqliteBridge({
+  scriptPath: path.join(__dirname, "server", "sqlite_bridge.py"),
+  dbPath: SQLITE_DB_PATH
+});
 
 const passFromFile = process.env.SMTP_PASS_FILE && (() => {
   try { return fs.readFileSync(process.env.SMTP_PASS_FILE, "utf8").trim(); } catch { return ""; }
@@ -196,6 +204,16 @@ function validateEventPayload(payload) {
 
 function indentBlock(text) {
   return (text || "").split(/\r?\n/).map((line) => `  ${line}`);
+}
+
+function toDateOnlyIso(date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function resolveWeekStart(input) {
+  const base = typeof input === "string" && input ? new Date(input) : null;
+  const target = base && !Number.isNaN(base.getTime()) ? base : new Date();
+  return startOfWeek(target, { weekStartsOn: 0 });
 }
 
 function formatDateTime(value) {
@@ -328,46 +346,35 @@ function createEventRecord(payload) {
   };
 }
 
-async function persistJsonRecord(filePath, record, label) {
+async function persistContactSubmission(record) {
   try {
-    await fsp.mkdir(DATA_STORAGE_DIR, { recursive: true });
-    const existing = await fsp.readFile(filePath, "utf8").catch(() => "[]");
-    let parsed = [];
-    try {
-      parsed = JSON.parse(existing);
-      if (!Array.isArray(parsed)) parsed = [];
-    } catch {
-      parsed = [];
-    }
-    parsed.push(record);
-    await fsp.writeFile(filePath, JSON.stringify(parsed, null, 2));
+    await sqliteBridge.saveContactSubmission(record);
   } catch (err) {
-    console.error(`failed to persist ${label}`, err.message);
+    console.error("failed to persist contact submission", err.message);
   }
 }
 
-async function persistContactSubmission(record) {
-  await persistJsonRecord(CONTACT_STORAGE_FILE, record, "contact submission");
-}
-
 async function persistEventSubmission(record) {
-  await persistJsonRecord(EVENT_STORAGE_FILE, record, "event submission");
-}
-
-async function readJsonArray(filePath) {
   try {
-    const raw = await fsp.readFile(filePath, "utf8");
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    await sqliteBridge.saveEventSubmission(record);
   } catch (err) {
-    if (err?.code === "ENOENT") return [];
-    console.error(`failed to read ${filePath}`, err.message);
-    return [];
+    console.error("failed to persist event submission", err.message);
   }
 }
 
 async function readEventSubmissions() {
-  return readJsonArray(EVENT_STORAGE_FILE);
+  try {
+    const rows = await sqliteBridge.listEventSubmissions();
+    return Array.isArray(rows) ? rows : [];
+  } catch (err) {
+    console.error("failed to read event submissions", err.message);
+    return [];
+  }
+}
+
+async function readEventsFromStore(startIso, endIso) {
+  const rows = await sqliteBridge.listEvents({ start: startIso, end: endIso });
+  return Array.isArray(rows) ? rows : [];
 }
 
 function requireAdminKey(req, res, next) {
@@ -449,6 +456,19 @@ app.get("/api/admin/event-submissions", requireAdminKey, async (_req, res) => {
   }
 });
 
+app.get("/api/events", async (req, res) => {
+  try {
+    const startDate = resolveWeekStart(req.query?.start);
+    const startIso = toDateOnlyIso(startDate);
+    const endIso = toDateOnlyIso(addDays(startDate, 7));
+    const items = await readEventsFromStore(startIso, endIso);
+    res.status(200).json({ ok: true, items });
+  } catch (err) {
+    console.error("events api error:", err.message);
+    res.status(500).json({ ok: false, error: "server_error" });
+  }
+});
+
 // ---------- Static files (no index) ----------
 if (hasDist) {
   app.use(express.static(distRoot, { index: false, fallthrough: true }));
@@ -461,9 +481,41 @@ app.get(/.*/, (_req, res) => {
   res.sendFile(path.join(distRoot, "index.html"));
 });
 
-app.listen(PORT, () => {
-  console.log(`✅ OMJ serving ${hasDist ? distRoot : "(no dist)"} on :${PORT}`);
-});
+async function seedEventsFromAssets() {
+  try {
+    const raw = await fsp.readFile(EVENT_SEED_FILE, "utf8");
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length === 0) return null;
+    const result = await sqliteBridge.upsertEvents(parsed);
+    return result;
+  } catch (err) {
+    if (err?.code === "ENOENT") {
+      console.warn(`⚠️ event seed file not found at ${EVENT_SEED_FILE}`);
+      return null;
+    }
+    console.error("failed to seed events", err.message);
+    return null;
+  }
+}
+
+async function bootstrapStorage() {
+  await sqliteBridge.init();
+  const seeded = await seedEventsFromAssets();
+  if (seeded?.total) {
+    console.log(`ℹ️ events synced from seeds — inserted ${seeded.inserted}, updated ${seeded.updated}`);
+  }
+}
+
+bootstrapStorage()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`✅ OMJ serving ${hasDist ? distRoot : "(no dist)"} on :${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("❌ failed to bootstrap storage", err);
+    process.exit(1);
+  });
 
 function bootstrapEnv() {
   const envFiles = [".env", ".env.omjapp"];

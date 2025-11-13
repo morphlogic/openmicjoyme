@@ -1,9 +1,11 @@
 export interface Event {
   id: string;
+  slug?: string;
   name: string;
   venue: string;
   address?: string;
   city?: string;
+  eventDate: string;
   dayOfWeek: number;
   startTimeLocal: string;
   signupTimeLocal?: string;

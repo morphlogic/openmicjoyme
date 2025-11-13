@@ -1,10 +1,9 @@
 import { Component } from '@angular/core';
-import { Observable, map } from 'rxjs';
-import { EventService } from '../../../core/services/event.service';
-import { Event } from '../../../core/models/event.model';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
+import { EventService, DayGroup } from '../../../core/services/event.service';
 
-interface DayGroup { date: Date; weekday: number; items: Event[] }
-interface Vm { days: DayGroup[]; any: boolean }
+interface Vm { days: DayGroup[]; any: boolean; rangeStart: Date; rangeEnd: Date }
 
 @Component({
   selector: 'app-events-list',
@@ -12,9 +11,35 @@ interface Vm { days: DayGroup[]; any: boolean }
   styleUrls: ['./events-list.component.scss']
 })
 export class EventsListComponent {
+  private readonly maxOffset = 7;
+  private currentOffset = 0;
+  private readonly offset$ = new BehaviorSubject(0);
+
   weekdayLabel = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  vm$: Observable<Vm> = this.eventService.getThisWeek().pipe(
-    map((days) => ({ days, any: days.some(d => d.items.length > 0) }))
+  vm$: Observable<Vm> = this.offset$.pipe(
+    switchMap((offset) => this.eventService.getWeek(offset)),
+    map((week) => ({
+      days: week.days,
+      rangeStart: week.rangeStart,
+      rangeEnd: week.rangeEnd,
+      any: week.days.some(d => d.items.length > 0)
+    }))
   );
   constructor(private eventService: EventService) {}
+
+  shiftWeek(direction: number): void {
+    const next = this.currentOffset + direction;
+    const clamped = Math.max(0, Math.min(this.maxOffset, next));
+    if (clamped === this.currentOffset) return;
+    this.currentOffset = clamped;
+    this.offset$.next(this.currentOffset);
+  }
+
+  get disablePrev(): boolean {
+    return this.currentOffset === 0;
+  }
+
+  get disableNext(): boolean {
+    return this.currentOffset >= this.maxOffset;
+  }
 }

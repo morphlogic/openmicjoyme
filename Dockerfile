@@ -10,9 +10,15 @@ RUN npm run build
 FROM node:20-bookworm-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production PORT=4000
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends python3 \
+  && rm -rf /var/lib/apt/lists/*
 # Copy runtime files
 COPY --from=build /app/server.cjs /app/server.cjs
 COPY --from=build /app/dist /app/dist
+COPY --from=build /app/lib /app/lib
+COPY --from=build /app/server /app/server
+COPY --from=build /app/src/assets/data /app/src/assets/data
 COPY package*.json ./
 RUN npm ci --omit=dev
 
